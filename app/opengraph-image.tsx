@@ -91,11 +91,11 @@ export default async function Image() {
             fontWeight: 600,
           }}
         >
-          <span
+          <div
             style={{
-              display: "inline-block",
-              width: "8px",
-              height: "8px",
+              display: "flex",
+              width: "10px",
+              height: "10px",
               background: "#FF6B35",
               borderRadius: "9999px",
             }}

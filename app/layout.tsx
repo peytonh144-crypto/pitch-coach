@@ -17,10 +17,15 @@ const TITLE = "Pitch Coach — AI practice for storm restoration reps";
 const DESCRIPTION =
   "Run 100 fake doors before your next real one. AI homeowner roleplay, persona-specific coaching, and brutal-but-fair grading.";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   applicationName: "Pitch Coach",
+  metadataBase: SITE_URL ? new URL(SITE_URL) : undefined,
   openGraph: {
     type: "website",
     title: TITLE,
