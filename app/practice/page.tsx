@@ -155,14 +155,14 @@ export default function PracticePage() {
 
   return (
     <div className="flex flex-1 flex-col items-center">
-      <main className="flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-12">
+      <main className="flex w-full max-w-2xl flex-1 flex-col gap-6 px-5 py-10 sm:px-6 sm:py-12">
         <header className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">
             Practice Mode
           </h1>
           <p className="text-sm text-zinc-400">
-            Roleplay a door conversation with an AI homeowner. Choose a persona
-            and scenario, then practice your pitch.
+            Pick a homeowner persona and a scenario, then run a practice
+            conversation.
           </p>
         </header>
 
@@ -216,7 +216,7 @@ export default function PracticePage() {
               type="button"
               onClick={startPractice}
               disabled={!persona || !scenario || loading}
-              className="self-start rounded-lg bg-zinc-100 px-5 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+              className="self-start rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
             >
               {loading ? "Starting…" : "Start Practice"}
             </button>
@@ -234,13 +234,13 @@ export default function PracticePage() {
                     <button
                       type="button"
                       onClick={reset}
-                      className="rounded-md bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-950 transition-colors hover:bg-white"
+                      className="rounded-md bg-brand px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-hover"
                     >
                       Practice Again
                     </button>
                     <Link
                       href="/history"
-                      className="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
+                      className="rounded-md border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800"
                     >
                       View History
                     </Link>
@@ -253,7 +253,7 @@ export default function PracticePage() {
                       disabled={
                         grading || loading || history.length === 0
                       }
-                      className="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-md border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       End Practice
                     </button>
@@ -261,7 +261,7 @@ export default function PracticePage() {
                       type="button"
                       onClick={reset}
                       disabled={grading}
-                      className="rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-md border border-zinc-700 px-3 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Restart
                     </button>
@@ -343,7 +343,7 @@ export default function PracticePage() {
                   type="button"
                   onClick={sendRepMessage}
                   disabled={inputDisabled || !draft.trim()}
-                  className="self-end rounded-md bg-zinc-100 px-4 py-1.5 text-xs font-medium text-zinc-950 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+                  className="self-end rounded-md bg-brand px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
                 >
                   Send
                 </button>

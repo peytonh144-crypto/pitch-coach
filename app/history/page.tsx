@@ -42,7 +42,7 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-1 flex-col items-center">
-      <main className="flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
+      <main className="flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 sm:px-6 sm:py-12">
         <header className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">History</h1>
           <p className="text-sm text-zinc-400">
@@ -52,15 +52,20 @@ export default function HistoryPage() {
         </header>
 
         {!hydrated ? null : sessions.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-8 text-center text-sm text-zinc-400">
-            No practice sessions yet.{" "}
+          <div className="flex flex-col items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900 px-6 py-12 text-center">
+            <p className="text-base text-zinc-300">
+              No practice sessions yet.
+            </p>
+            <p className="max-w-md text-sm text-zinc-400">
+              Head to Practice Mode and run one — your sessions and grades show
+              up here.
+            </p>
             <Link
               href="/practice"
-              className="text-zinc-200 underline underline-offset-2 hover:text-white"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
             >
-              Head to Practice Mode
-            </Link>{" "}
-            and run one.
+              Start a Practice
+            </Link>
           </div>
         ) : (
           <ul className="flex flex-col gap-2">
