@@ -9,10 +9,43 @@ export default function Home() {
   const [editingConfig, setEditingConfig] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
+  const [persona, setPersona] = useState("generic");
   const [objection, setObjection] = useState("");
   const [response, setResponse] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const PERSONA_OPTIONS: { value: string; label: string }[] = [
+    { value: "generic", label: "Generic / Not sure yet" },
+    {
+      value: "skeptical_bob",
+      label: "Skeptical Bob — been burned, asks tough questions",
+    },
+    {
+      value: "busy_mom_sarah",
+      label: "Busy Mom Sarah — distracted, wants short answers",
+    },
+    {
+      value: "shopping_steve",
+      label: "Shopping Steve — wants 3 quotes, price-focused",
+    },
+    {
+      value: "retired_vet_ron",
+      label: "Retired Vet Ron — older, distrustful, respects respect",
+    },
+    {
+      value: "diy_dave",
+      label: "DIY Dave — thinks he can fix it himself",
+    },
+    {
+      value: "renter_riley",
+      label: "Renter / Just-Bought Riley — defers to spouse/landlord",
+    },
+    {
+      value: "already_in_progress_pam",
+      label: "Already-In-Progress Pam — has a contractor already",
+    },
+  ];
 
   useEffect(() => {
     const c = localStorage.getItem("pc_company") ?? "";
@@ -50,6 +83,7 @@ export default function Home() {
           company: company.trim(),
           years: years.trim(),
           area: area.trim(),
+          persona,
         }),
       });
       const data = (await res.json()) as { response?: string; error?: string };
@@ -130,6 +164,27 @@ export default function Home() {
             )}
           </section>
         )}
+
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="persona"
+            className="text-sm font-medium text-zinc-300"
+          >
+            Homeowner type
+          </label>
+          <select
+            id="persona"
+            value={persona}
+            onChange={(e) => setPersona(e.target.value)}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm text-zinc-100 focus:border-zinc-600 focus:outline-none"
+          >
+            {PERSONA_OPTIONS.map((p) => (
+              <option key={p.value} value={p.value} className="bg-zinc-900">
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <textarea
           value={objection}
