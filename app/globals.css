@@ -24,3 +24,32 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.prose-grade h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: #f4f4f5;
+}
+.prose-grade h2:first-child {
+  margin-top: 0;
+}
+.prose-grade p {
+  margin-bottom: 0.5rem;
+}
+.prose-grade ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.prose-grade li {
+  margin-bottom: 0.35rem;
+}
+.prose-grade strong {
+  color: #f4f4f5;
+  font-weight: 600;
+}
+.prose-grade em {
+  color: #d4d4d8;
+}

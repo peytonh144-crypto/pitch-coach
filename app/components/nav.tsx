@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/", label: "Field Mode" },
   { href: "/practice", label: "Practice Mode" },
+  { href: "/history", label: "History" },
 ];
 
 export default function Nav() {
