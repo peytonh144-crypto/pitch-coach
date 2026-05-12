@@ -10,6 +10,19 @@ const client = new Anthropic();
 
 type Turn = { role: "rep" | "homeowner"; content: string };
 
+const SILENCE_SENTINEL = "[REP_SILENT]";
+
+function countTrailingSilences(history: Turn[]): number {
+  let count = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const t = history[i];
+    if (t.role === "homeowner") continue;
+    if (t.content === SILENCE_SENTINEL) count++;
+    else break;
+  }
+  return count;
+}
+
 function buildSystemPrompt(opts: {
   persona: PersonaKey;
   scenario: ScenarioKey;
@@ -69,7 +82,10 @@ export async function POST(request: Request) {
   const history = Array.isArray(body.history) ? body.history : [];
   const repConfig = body.repConfig ?? {};
 
-  const system = buildSystemPrompt({
+  const trailingSilences = countTrailingSilences(history);
+  let isEndOfConversation = false;
+
+  const baseSystem = buildSystemPrompt({
     persona,
     scenario,
     company:
@@ -78,12 +94,28 @@ export async function POST(request: Request) {
     area: typeof repConfig.area === "string" ? repConfig.area.trim() : "",
   });
 
+  let system = baseSystem;
+  if (trailingSilences === 1) {
+    system =
+      baseSystem +
+      "\n\nThe rep just stood there silently for 5+ seconds. React in character with light impatience — look at your watch, gesture toward inside, say something like 'You good?' or 'Do you need something?'. Make it feel like they're losing your attention. Keep it to 1 sentence.";
+  } else if (trailingSilences >= 2) {
+    system =
+      baseSystem +
+      "\n\nThe rep has now been silent twice in a row. They've lost you. Close the conversation in character — say something like 'Okay well I gotta get back inside, have a good one' or similar. Keep it natural and brief.";
+    isEndOfConversation = true;
+  }
+
   // Map our role names → Anthropic API role names.
   // The rep IS the user driving the conversation, so rep → "user".
   // The homeowner is the model's character, so homeowner → "assistant".
+  // Replace silence sentinels with a description the model can read.
   const messages: Anthropic.MessageParam[] = history.map((turn) => ({
     role: turn.role === "rep" ? "user" : "assistant",
-    content: turn.content,
+    content:
+      turn.role === "rep" && turn.content === SILENCE_SENTINEL
+        ? "[The rep stood there silently, saying nothing.]"
+        : turn.content,
   }));
 
   // If history is empty (start of practice), we need the model to produce the
@@ -117,7 +149,7 @@ export async function POST(request: Request) {
       .join("\n")
       .trim();
 
-    return Response.json({ response: text });
+    return Response.json({ response: text, isEndOfConversation });
   } catch (error) {
     if (error instanceof Anthropic.APIError) {
       return Response.json(
