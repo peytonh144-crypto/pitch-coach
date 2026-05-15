@@ -65,6 +65,7 @@ export default function PracticePage() {
   // rep starts speaking. Drives the pulse-faster animation in the indicator.
   const [silenceProgress, setSilenceProgress] = useState(0);
   const [speechActive, setSpeechActive] = useState(false);
+  const [needsTapToResume, setNeedsTapToResume] = useState(false);
 
   // Refs so VAD callbacks always see the latest values without re-init
   const historyRef = useRef<Turn[]>([]);
@@ -75,6 +76,7 @@ export default function PracticePage() {
   const vadRef = useRef<MicVADInstance | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumePlaybackRef = useRef<(() => void) | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -137,6 +139,40 @@ export default function PracticePage() {
     }
   }
 
+  // Must run synchronously inside a user-gesture handler. Whisper + Claude +
+  // TTS roundtrips break the gesture chain, so browsers (especially iOS
+  // Safari) reject the eventual TTS .play() unless we've already unlocked an
+  // <audio> element during the click. We create one shared element, play a
+  // few ms of silence to flip its "user-activated" bit, then reuse the same
+  // element for every later TTS reply.
+  function unlockAudioPlayback() {
+    const audio = new Audio();
+    audio.setAttribute("playsinline", "");
+    audio.preload = "auto";
+    audio.src =
+      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAVFYAAFRWAAABAAgAZGF0YQAAAAA=";
+    audio.play().catch(() => {
+      // The silent unlock itself may reject in obscure cases — that's fine,
+      // the element is still our reuse target.
+    });
+    audioElRef.current = audio;
+
+    // iOS Safari also gates Web Audio behind a user gesture. Resume an
+    // AudioContext during the same click so any future audio graph works.
+    try {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (Ctx) {
+        const ctx = new Ctx();
+        void ctx.resume();
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   async function teardownVoice() {
     endedRef.current = true;
     processingRef.current = false;
@@ -157,6 +193,8 @@ export default function PracticePage() {
       }
       audioElRef.current = null;
     }
+    resumePlaybackRef.current = null;
+    setNeedsTapToResume(false);
   }
 
   async function fetchHomeowner(
@@ -221,21 +259,41 @@ export default function PracticePage() {
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioElRef.current = audio;
+
+      // Reuse the element unlocked during the Start click. A fresh
+      // new Audio() here would be re-blocked by autoplay policy.
+      let audio = audioElRef.current;
+      if (!audio) {
+        audio = new Audio();
+        audio.setAttribute("playsinline", "");
+        audio.preload = "auto";
+        audioElRef.current = audio;
+      }
+      audio.src = url;
+
       await new Promise<void>((resolve) => {
-        audio.onended = () => {
+        const cleanup = () => {
           URL.revokeObjectURL(url);
+          audio!.onended = null;
+          audio!.onerror = null;
+          resumePlaybackRef.current = null;
           resolve();
         };
-        audio.onerror = () => {
-          URL.revokeObjectURL(url);
-          resolve();
-        };
-        audio.play().catch((err) => {
-          setError(`Audio playback blocked: ${err?.message ?? "unknown"}`);
-          URL.revokeObjectURL(url);
-          resolve();
+        audio!.onended = cleanup;
+        audio!.onerror = cleanup;
+        audio!.play().catch(() => {
+          // Edge case: the unlock didn't take (e.g., user navigated away and
+          // back, gesture got reused, etc.). Surface a tap-to-resume button
+          // and hold the conversation flow until the user re-arms playback.
+          resumePlaybackRef.current = () => {
+            setNeedsTapToResume(false);
+            audio!.play().catch(() => {
+              // Truly stuck — drop the audio and let the conversation
+              // continue rather than freezing.
+              cleanup();
+            });
+          };
+          setNeedsTapToResume(true);
         });
       });
     } catch (e) {
@@ -409,6 +467,14 @@ export default function PracticePage() {
 
   async function startPractice() {
     if (!persona || !scenario || loading) return;
+
+    // Unlock audio playback SYNCHRONOUSLY, before any await consumes the
+    // user-gesture context. Without this, the eventual TTS .play() is
+    // blocked by autoplay policy ("not allowed by the user agent").
+    if (voiceMode) {
+      unlockAudioPlayback();
+    }
+
     endedRef.current = false;
     processingRef.current = false;
     setStarted(true);
@@ -416,6 +482,8 @@ export default function PracticePage() {
     historyRef.current = [];
     setGrade(null);
     setError("");
+    setNeedsTapToResume(false);
+    resumePlaybackRef.current = null;
     setVoiceState("idle");
 
     if (voiceMode) {
@@ -727,6 +795,16 @@ export default function PracticePage() {
               <div className="rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
                 {error}
               </div>
+            )}
+
+            {needsTapToResume && (
+              <button
+                type="button"
+                onClick={() => resumePlaybackRef.current?.()}
+                className="self-center rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+              >
+                Tap to continue
+              </button>
             )}
 
             {grading && (
